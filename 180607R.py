@@ -85,14 +85,15 @@ def applyMidPointFilter(N, img):
         for j in  range(N):
           for k in range(img.shape[2]):
             values[k].append(img[row-filterMid+i][col-filterMid+j][k])
+      vals = []
       for k in range(img.shape[2]):
-        values[k].sort()
-      newRow.append([(min(values[0]) + max(values[0])) / 2, (min(values[1]) + max(values[1])) / 2, (min(values[2]) + max(values[2])) / 2])
+        vals.append((min(values[k]) + max(values[k])) / 2)
+      newRow.append(vals)
     filteredImg.append(newRow)
   return np.array(filteredImg,dtype=np.uint8)
 
 
-name="testImg.jpg"
+name="test2.png"
 originalImg=cv2.imread(name,cv2.IMREAD_COLOR)
 displayImage('Original Image', originalImg)
 N = 3
@@ -101,3 +102,18 @@ wrappedImg = wrapEdges(originalImg)
 print("The shape of the original image is : ", originalImg.shape)
 print("The shape of the wrapped image is : ", wrappedImg.shape)
 displayImage('Wrapped Image', wrappedImg)
+
+meanFilteredImg = applyMeanFilter(N, wrappedImg)
+print("The shape of the wrapped image is : ", wrappedImg.shape)
+print("The shape of the filtered image is : ", meanFilteredImg.shape)
+displayImage('Mean Filtered Image', meanFilteredImg)
+
+medianFilteredImg = applyMedainFilter(3, wrappedImg)
+print("The shape of the wrapped image is : ", wrappedImg.shape)
+print("The shape of the median filtered image is : ", medianFilteredImg.shape)
+displayImage('Median Filtered Image', medianFilteredImg)
+
+midPointFilteredImg = applyMidPointFilter(3, wrappedImg)
+print("The shape of the wrapped image is : ", wrappedImg.shape)
+print("The shape of the midPoint filtered image is : ", midPointFilteredImg.shape)
+displayImage('Mid Point Filtered Image', midPointFilteredImg)
