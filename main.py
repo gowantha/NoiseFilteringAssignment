@@ -11,6 +11,7 @@ def displayImage(imgWindowName, img):
 #saves the image
 def saveImage(imgName, img):
     cv2.imwrite(imgName, img)
+    print("Saved image", imgName)
 
 #returns the image name and the extension seperately
 def getImageNameAndExtension(imgName):
@@ -81,34 +82,46 @@ def applyMedainFilter(N, img):
             values[k].append(img[row-filterMid+i][col-filterMid+j][k])
       for k in range(img.shape[2]):
         values[k].sort()
-      newRow.append([values[0][4], values[1][4], values[2][4]])
+      newRow.append([values[0][len(values[0])//2], values[1][len(values[1])//2], values[2][len(values[1])//2]])
     filteredImg.append(newRow)
   return np.array(filteredImg,dtype=np.uint8)
 
 #apply mid-point filter
-def applyMidPointFilter(N, img):
-  filteredImg = []
-  filterMid = N//2
-  for row in range(filterMid, len(img)-filterMid):
-    newRow = []
-    for col in range(filterMid, len(img[row])-filterMid):
-      values = [[],[],[]]
-      for i in range(N):
-        for j in  range(N):
-          for k in range(img.shape[2]):
-            values[k].append(img[row-filterMid+i][col-filterMid+j][k])
-      vals = []
-      for k in range(img.shape[2]):
-        vals.append((min(values[k]) + max(values[k])) / 2)
-      newRow.append(vals)
-    filteredImg.append(newRow)
-  return np.array(filteredImg,dtype=np.uint8)
+def applyMidPointFilter(N, wrappedImg, originalImg):
+    rows, cols, channels = wrappedImg.shape
+    Orows, Ocols, Ochannels = originalImg.shape
+    newImg = np.zeros((Orows, Ocols, Ochannels))
+    for d in range(0, rows - N + 1):
+        for e in range(0, cols - N + 1):
+            if ((d + N > rows - 1) and (e + N <= rows - 1)):
+                matrix = wrappedImg[d:, e:e + N]
+            elif ((d + N <= rows - 1) and (e + N > rows - 1)):
+                matrix = wrappedImg[d:d + N, e:]
+            elif ((d + N > rows - 1) and (e + N > rows - 1)):
+                matrix = wrappedImg[d:, e:]
+            else:
+                matrix = wrappedImg[d:d + N, e:e + N]
+
+            values = []
+            for cha in range(Ochannels):
+                values.append([])
+            for a in range(0, N):
+                for b in range(0, N):
+                    for ch in range(0,Ochannels):
+                        values[ch].append(matrix[a][b][ch])
+
+            for ch in range(Ochannels):
+                minVal = min(values[ch])
+                maxVal = max(values[ch])
+                newImg[d][e][ch] = round((int(minVal)+int(maxVal))/2)
+
+    return np.array(newImg,dtype=np.uint8)
 
 
 imageNames = []
 path = os.getcwd()
 for filename in os.listdir(path):
-    if filename.split(".")[-1] == "png":
+    if filename.split(".")[-1] == "jpg":
         imageNames.append(filename)
 
 for imgName in imageNames:
@@ -116,22 +129,22 @@ for imgName in imageNames:
     # displayImage('Original Image', originalImg)
     nameWithoutExtension, extension = getImageNameAndExtension(imgName)
 
-    N = 3
+    N = 5
 
     wrappedImg = wrapEdges(originalImg)
     # displayImage('Wrapped Image', wrappedImg)
 
     meanFilteredImg = applyMeanFilter(N, wrappedImg)
     # displayImage('Mean Filtered Image', meanFilteredImg)
-    saveImage(nameWithoutExtension+"_meanFiltered."+extension, meanFilteredImg)
+    saveImage(nameWithoutExtension+"_Mean_Filter."+extension, meanFilteredImg)
 
     medianFilteredImg = applyMedainFilter(N, wrappedImg)
     # displayImage('Median Filtered Image', medianFilteredImg)
-    saveImage(nameWithoutExtension+"_medianFiltered."+extension, medianFilteredImg)
+    saveImage(nameWithoutExtension+"_Median_Filter."+extension, medianFilteredImg)
 
-    midPointFilteredImg = applyMidPointFilter(N, wrappedImg)
+    midPointFilteredImg = applyMidPointFilter(N, wrappedImg, originalImg)
     # displayImage('Mid-Point Filtered Image', midPointFilteredImg)
-    saveImage(nameWithoutExtension+"_midPointFiltered."+extension, midPointFilteredImg)
+    saveImage(nameWithoutExtension+"_MidPoint_Filter."+extension, midPointFilteredImg)
 
     # print("The shape of the original image is : ", originalImg.shape)
     # print("The shape of the wrapped image is : ", wrappedImg.shape)
