@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
+import os
 
 # displays the image (press '0' t close and continue)
 def displayImage(imgWindowName, img):
@@ -11,6 +11,14 @@ def displayImage(imgWindowName, img):
 #saves the image
 def saveImage(imgName, img):
     cv2.imwrite(imgName, img)
+
+#returns the image name and the extension seperately
+def getImageNameAndExtension(imgName):
+  nameSegments = imgName.split(".")
+  nameWithoutExtension = ""
+  for i in range(len(nameSegments)-1):
+    nameWithoutExtension += nameSegments[i]
+  return nameWithoutExtension, nameSegments[-1]
 
 #returns a copy of the image
 def copy(img):
@@ -25,6 +33,7 @@ def copy(img):
     imageCopy.append(newRow)
   return imageCopy
 
+# wraps the edges of the image
 def wrapEdges(img):
     pixelsToWrap = N//2
     imageCopy = copy(img)
@@ -33,6 +42,7 @@ def wrapEdges(img):
         imageCopy[row] = list(imageCopy[row][-pixelsToWrap:]) + imageCopy[row] + imageCopy[row][:pixelsToWrap]
     return np.array(imageCopy,dtype=np.uint8)
 
+#returns the mean filter mask
 def getMeanFilterMask(N):
     meanFilterMask = []
     for row in range(N):
@@ -40,7 +50,7 @@ def getMeanFilterMask(N):
         meanFilterMask.append(filterRow)
     return meanFilterMask
 
-#returns a copy of the image with fixed filter applied
+#apply mean filter
 def applyMeanFilter(N, img):
   meanFilterMask = getMeanFilterMask(N)
   filteredImg = []
@@ -57,6 +67,7 @@ def applyMeanFilter(N, img):
     filteredImg.append(newRow)
   return np.array(filteredImg,dtype=np.uint8)
 
+#apply median filter
 def applyMedainFilter(N, img):
   filteredImg = []
   filterMid = N//2
@@ -74,6 +85,7 @@ def applyMedainFilter(N, img):
     filteredImg.append(newRow)
   return np.array(filteredImg,dtype=np.uint8)
 
+#apply mid-point filter
 def applyMidPointFilter(N, img):
   filteredImg = []
   filterMid = N//2
@@ -93,27 +105,36 @@ def applyMidPointFilter(N, img):
   return np.array(filteredImg,dtype=np.uint8)
 
 
-name="test2.png"
-originalImg=cv2.imread(name,cv2.IMREAD_COLOR)
-displayImage('Original Image', originalImg)
-N = 3
+imageNames = []
+path = os.getcwd()
+for filename in os.listdir(path):
+    if filename.split(".")[-1] == "png":
+        imageNames.append(filename)
 
-wrappedImg = wrapEdges(originalImg)
-print("The shape of the original image is : ", originalImg.shape)
-print("The shape of the wrapped image is : ", wrappedImg.shape)
-displayImage('Wrapped Image', wrappedImg)
+for imgName in imageNames:
+    originalImg=cv2.imread(imgName,cv2.IMREAD_COLOR)
+    # displayImage('Original Image', originalImg)
+    nameWithoutExtension, extension = getImageNameAndExtension(imgName)
 
-meanFilteredImg = applyMeanFilter(N, wrappedImg)
-print("The shape of the wrapped image is : ", wrappedImg.shape)
-print("The shape of the filtered image is : ", meanFilteredImg.shape)
-displayImage('Mean Filtered Image', meanFilteredImg)
+    N = 3
 
-medianFilteredImg = applyMedainFilter(3, wrappedImg)
-print("The shape of the wrapped image is : ", wrappedImg.shape)
-print("The shape of the median filtered image is : ", medianFilteredImg.shape)
-displayImage('Median Filtered Image', medianFilteredImg)
+    wrappedImg = wrapEdges(originalImg)
+    # displayImage('Wrapped Image', wrappedImg)
 
-midPointFilteredImg = applyMidPointFilter(3, wrappedImg)
-print("The shape of the wrapped image is : ", wrappedImg.shape)
-print("The shape of the midPoint filtered image is : ", midPointFilteredImg.shape)
-displayImage('Mid Point Filtered Image', midPointFilteredImg)
+    meanFilteredImg = applyMeanFilter(N, wrappedImg)
+    # displayImage('Mean Filtered Image', meanFilteredImg)
+    saveImage(nameWithoutExtension+"_meanFiltered."+extension, meanFilteredImg)
+
+    medianFilteredImg = applyMedainFilter(N, wrappedImg)
+    # displayImage('Median Filtered Image', medianFilteredImg)
+    saveImage(nameWithoutExtension+"_medianFiltered."+extension, medianFilteredImg)
+
+    midPointFilteredImg = applyMidPointFilter(N, wrappedImg)
+    # displayImage('Mid-Point Filtered Image', midPointFilteredImg)
+    saveImage(nameWithoutExtension+"_midPointFiltered."+extension, midPointFilteredImg)
+
+    # print("The shape of the original image is : ", originalImg.shape)
+    # print("The shape of the wrapped image is : ", wrappedImg.shape)
+    # print("The shape of the filtered image is : ", meanFilteredImg.shape)
+    # print("The shape of the median filtered image is : ", medianFilteredImg.shape)
+    # print("The shape of the midPoint filtered image is : ", midPointFilteredImg.shape)
